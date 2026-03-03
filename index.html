@@ -95,7 +95,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Estatuto</label>
                         <select id="new-status" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700 bg-white">
-                            <option value="Planeamento">Planeamento</option>
+                            <option value="Planeamento">Planejamento</option>
                             <option value="Em Andamento">Em Andamento</option>
                             <option value="Revisão">Revisão</option>
                             <option value="Contínuo">Contínuo</option>
@@ -129,9 +129,9 @@
                 name: 'Campanha Nacional',
                 description: 'Acompanhamento e execução das diretrizes da campanha nacional na região Centro-Oeste.',
                 status: 'Em Andamento',
-                progress: 65,
+                progress: 90,
                 owner: 'Sénior e Pleno',
-                category: 'Marketing Estratégico',
+                category: 'Marketing',
                 iconName: 'map-pin',
                 iconColor: 'text-blue-500'
             },
@@ -140,31 +140,31 @@
                 name: 'Marcas Próprias',
                 description: 'Estratégia de penetração e alavancagem de vendas dos produtos de marca própria.',
                 status: 'Em Andamento',
-                progress: 40,
-                owner: 'Analista Sénior',
+                progress: 70,
+                owner: 'Pleno e Sênior',
                 category: 'Comercial',
                 iconName: 'briefcase',
                 iconColor: 'text-[#FF5510]'
             },
             {
                 id: 3,
-                name: 'Como eu Faço (Garciele)',
+                name: 'Como eu Faço',
                 description: 'Mapeamento de processos, treinamentos e melhores práticas regionais.',
-                status: 'Revisão',
-                progress: 85,
-                owner: 'Garciele',
-                category: 'Processos / Treinamento',
+                status: 'planejamento',
+                progress: 10,
+                owner: 'Garcieli',
+                category: 'Sucesso do Associado',
                 iconName: 'users',
                 iconColor: 'text-emerald-500'
             },
             {
                 id: 4,
                 name: 'Pricing',
-                description: 'Análise de competitividade, margem e ajustes de preços para o Centro-Oeste.',
+                description: 'Criação do passo a passo para acompanhamento do Projeto',
                 status: 'Contínuo',
-                progress: 50,
+                progress: 2,
                 owner: 'Analista Pleno',
-                category: 'Análise de Dados',
+                category: 'BI e Precificação',
                 iconName: 'trending-up',
                 iconColor: 'text-rose-500'
             },
@@ -173,9 +173,9 @@
                 name: 'Sales Force',
                 description: 'Gestão da ferramenta, suporte ao time de vendas e análise de funil.',
                 status: 'Em Andamento',
-                progress: 70,
-                owner: 'Sénior e Pleno',
-                category: 'Tecnologia / CRM',
+                progress: 2,
+                owner: 'Mariane',
+                category: 'Tecnologia / Consultoria',
                 iconName: 'clock',
                 iconColor: 'text-orange-500'
             },
@@ -183,10 +183,10 @@
                 id: 6,
                 name: 'Corrida de Rua',
                 description: 'Planejamento, patrocínio e execução do evento de marketing regional.',
-                status: 'Planeamento',
-                progress: 15,
-                owner: 'Analista Sénior',
-                category: 'Eventos',
+                status: 'Planejamento',
+                progress: 25,
+                owner: 'Mariane',
+                category: 'MKT, Com, Jur e Suc.',
                 iconName: 'calendar',
                 iconColor: 'text-teal-500'
             }
@@ -197,7 +197,7 @@
             switch (status) {
                 case 'Em Andamento': return 'bg-blue-50 text-blue-700 border-blue-200';
                 case 'Revisão': return 'bg-amber-50 text-amber-700 border-amber-200';
-                case 'Planeamento': return 'bg-[#FF5510]/10 text-[#FF5510] border-[#FF5510]/30';
+                case 'Planejamento': return 'bg-[#FF5510]/10 text-[#FF5510] border-[#FF5510]/30';
                 case 'Contínuo': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
                 default: return 'bg-slate-50 text-slate-700 border-slate-200';
             }
