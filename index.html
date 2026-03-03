@@ -387,4 +387,45 @@
 
     </script>
 </body>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { 
+    getFirestore, 
+    collection, 
+    addDoc, 
+    onSnapshot 
+  } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDA6FxBbzCTtR0sd6FZ_32cZry4XVH-4vc",
+    authDomain: "painel-de-projetos-87599.firebaseapp.com",
+    projectId: "painel-de-projetos-87599",
+    storageBucket: "painel-de-projetos-87599.firebasestorage.app",
+    messagingSenderId: "774075799350",
+    appId: "1:774075799350:web:b1ff1fac3a49c4c249c597"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  console.log("Firebase conectado!");
+
+  // Salvar ação
+  async function salvarAcao(nome) {
+    await addDoc(collection(db, "acoes"), {
+      nome: nome,
+      criadoEm: new Date()
+    });
+  }
+
+  // Escutar mudanças em tempo real
+  onSnapshot(collection(db, "acoes"), (snapshot) => {
+    console.log("Atualização em tempo real:");
+    snapshot.forEach((doc) => {
+      console.log(doc.data());
+    });
+  });
+
+  window.salvarAcao = salvarAcao;
+</script>
 </html>
