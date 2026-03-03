@@ -1,4 +1,5 @@
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import {
   getFirestore,
@@ -11,7 +12,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDA6FxBbzCTtR0sd6FZ_32cZry4XVH-4vc",
+  apiKey: "SUA_API_KEY",
   authDomain: "painel-de-projetos-87599.firebaseapp.com",
   projectId: "painel-de-projetos-87599",
   storageBucket: "painel-de-projetos-87599.firebasestorage.app",
@@ -25,6 +26,122 @@ const projectsRef = collection(db, "projects");
 
 let projects = [];
 
+document.addEventListener("DOMContentLoaded", () => {
+
+  function getStatusColorClasses(status) {
+    switch (status) {
+      case 'Em Andamento': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'Revisão': return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'Planejamento': return 'bg-[#FF5510]/10 text-[#FF5510] border-[#FF5510]/30';
+      case 'Contínuo': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      default: return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
+  }
+
+  function renderProjects() {
+    const grid = document.getElementById('projects-grid');
+    const count = document.getElementById('active-count');
+
+    if (!grid || !count) return;
+
+    count.innerText = projects.length;
+
+    grid.innerHTML = projects.map(project => `
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative">
+        <button onclick="deleteProject('${project.id}')" class="absolute top-4 right-4 text-red-500">🗑️</button>
+
+        <input 
+          type="text"
+          value="${project.name || ''}"
+          onchange="handleProjectChange('${project.id}', 'name', this.value)"
+          class="font-bold text-lg mb-2 w-full border-b focus:outline-none"
+        />
+
+        <textarea 
+          onchange="handleProjectChange('${project.id}', 'description', this.value)"
+          class="text-sm mb-2 w-full border focus:outline-none"
+        >${project.description || ''}</textarea>
+
+        <input 
+          type="text"
+          value="${project.owner || ''}"
+          onchange="handleProjectChange('${project.id}', 'owner', this.value)"
+          class="text-sm mb-2 w-full border-b focus:outline-none"
+        />
+
+        <select 
+          onchange="handleProjectChange('${project.id}', 'status', this.value)"
+          class="mb-2 px-2 py-1 border rounded ${getStatusColorClasses(project.status)}"
+        >
+          <option value="Planejamento" ${project.status === 'Planejamento' ? 'selected' : ''}>Planejamento</option>
+          <option value="Em Andamento" ${project.status === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option>
+          <option value="Revisão" ${project.status === 'Revisão' ? 'selected' : ''}>Revisão</option>
+          <option value="Contínuo" ${project.status === 'Contínuo' ? 'selected' : ''}>Contínuo</option>
+        </select>
+
+        <input 
+          type="number"
+          min="0" max="100"
+          value="${project.progress || 0}"
+          oninput="handleProgressChange('${project.id}', this.value)"
+          class="w-20 border-b focus:outline-none"
+        /> %
+      </div>
+    `).join('');
+  }
+
+  onSnapshot(projectsRef, (snapshot) => {
+    projects = snapshot.docs.map(docItem => ({
+      id: docItem.id,
+      ...docItem.data()
+    }));
+    renderProjects();
+  });
+
+  document.getElementById('add-project-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    await addDoc(projectsRef, {
+      name: document.getElementById('new-name').value,
+      category: document.getElementById('new-category').value,
+      owner: document.getElementById('new-owner').value,
+      status: document.getElementById('new-status').value,
+      progress: Number(document.getElementById('new-progress').value),
+      description: document.getElementById('new-description').value,
+      createdAt: new Date()
+    });
+
+    closeModal();
+  });
+
+  window.deleteProject = async function(id) {
+    await deleteDoc(doc(db, "projects", id));
+  };
+
+  window.handleProjectChange = async function(id, field, value) {
+    await updateDoc(doc(db, "projects", id), {
+      [field]: value
+    });
+  };
+
+  window.handleProgressChange = async function(id, value) {
+    await updateDoc(doc(db, "projects", id), {
+      progress: Number(value)
+    });
+  };
+
+  window.openModal = function() {
+    document.getElementById('modal').classList.remove('hidden');
+  };
+
+  window.closeModal = function() {
+    document.getElementById('modal').classList.add('hidden');
+    document.getElementById('add-project-form').reset();
+  };
+
+});
+
+</script>
 function getStatusColorClasses(status) {
   switch (status) {
     case 'Em Andamento': return 'bg-blue-50 text-blue-700 border-blue-200';
