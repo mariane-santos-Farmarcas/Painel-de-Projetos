@@ -1,260 +1,399 @@
-<script type="module">
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Projetos Centro-Oeste</title>
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons (CDN) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  deleteDoc,
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+    <!-- Configuração extra do Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#FF5510',
+                        brandHover: '#E64D0F'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 font-sans min-h-screen">
 
-const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "painel-de-projetos-87599.firebaseapp.com",
-  projectId: "painel-de-projetos-87599",
-  storageBucket: "painel-de-projetos-87599.firebasestorage.app",
-  messagingSenderId: "774075799350",
-  appId: "1:774075799350:web:b1ff1fac3a49c4c249c597"
-};
+    <div class="p-4 md:p-8">
+        
+        <!-- Cabeçalho do Painel -->
+        <div class="max-w-7xl mx-auto mb-8 bg-white p-6 md:px-8 md:py-6 rounded-2xl shadow-[0_2px_10px_-3px_rgba(255,85,16,0.15)] border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <div class="flex items-center gap-3 mb-1">
+                    <div class="bg-[#FF5510] p-2 rounded-lg text-white shadow-md shadow-[#FF5510]/20">
+                        <i data-lucide="trending-up" class="w-5 h-5"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Portfólio de Projetos</h1>
+                </div>
+                <p class="text-slate-500 text-sm ml-11">Região Centro-Oeste • Analista Sénior & Pleno <span id="conn-status" class="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Online</span></p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
+                <div class="bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-slate-600 text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="check-circle" class="w-[18px] h-[18px] text-emerald-500"></i>
+                    <span id="active-count">0</span> Ativos
+                </div>
+                <button 
+                    onclick="openModal()"
+                    class="flex-1 md:flex-none bg-[#FF5510] hover:bg-[#E64D0F] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm shadow-[#FF5510]/30"
+                >
+                    <i data-lucide="plus" class="w-[18px] h-[18px]"></i> Novo Projeto
+                </button>
+            </div>
+        </div>
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const projectsRef = collection(db, "projects");
+        <!-- Grelha de Projetos -->
+        <div id="projects-grid" class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- A carregar -->
+            <div class="col-span-full text-center py-12 text-slate-400 font-medium animate-pulse">
+                A conectar ao Firebase e a carregar projetos...
+            </div>
+        </div>
 
-let projects = [];
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  function getStatusColorClasses(status) {
-    switch (status) {
-      case 'Em Andamento': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'Revisão': return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'Planejamento': return 'bg-[#FF5510]/10 text-[#FF5510] border-[#FF5510]/30';
-      case 'Contínuo': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      default: return 'bg-slate-50 text-slate-700 border-slate-200';
-    }
-  }
-
-  function renderProjects() {
-    const grid = document.getElementById('projects-grid');
-    const count = document.getElementById('active-count');
-
-    if (!grid || !count) return;
-
-    count.innerText = projects.length;
-
-    grid.innerHTML = projects.map(project => `
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative">
-        <button onclick="deleteProject('${project.id}')" class="absolute top-4 right-4 text-red-500">🗑️</button>
-
-        <input 
-          type="text"
-          value="${project.name || ''}"
-          onchange="handleProjectChange('${project.id}', 'name', this.value)"
-          class="font-bold text-lg mb-2 w-full border-b focus:outline-none"
-        />
-
-        <textarea 
-          onchange="handleProjectChange('${project.id}', 'description', this.value)"
-          class="text-sm mb-2 w-full border focus:outline-none"
-        >${project.description || ''}</textarea>
-
-        <input 
-          type="text"
-          value="${project.owner || ''}"
-          onchange="handleProjectChange('${project.id}', 'owner', this.value)"
-          class="text-sm mb-2 w-full border-b focus:outline-none"
-        />
-
-        <select 
-          onchange="handleProjectChange('${project.id}', 'status', this.value)"
-          class="mb-2 px-2 py-1 border rounded ${getStatusColorClasses(project.status)}"
-        >
-          <option value="Planejamento" ${project.status === 'Planejamento' ? 'selected' : ''}>Planejamento</option>
-          <option value="Em Andamento" ${project.status === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option>
-          <option value="Revisão" ${project.status === 'Revisão' ? 'selected' : ''}>Revisão</option>
-          <option value="Contínuo" ${project.status === 'Contínuo' ? 'selected' : ''}>Contínuo</option>
-        </select>
-
-        <input 
-          type="number"
-          min="0" max="100"
-          value="${project.progress || 0}"
-          oninput="handleProgressChange('${project.id}', this.value)"
-          class="w-20 border-b focus:outline-none"
-        /> %
-      </div>
-    `).join('');
-  }
-
-  onSnapshot(projectsRef, (snapshot) => {
-    projects = snapshot.docs.map(docItem => ({
-      id: docItem.id,
-      ...docItem.data()
-    }));
-    renderProjects();
-  });
-
-  document.getElementById('add-project-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    await addDoc(projectsRef, {
-      name: document.getElementById('new-name').value,
-      category: document.getElementById('new-category').value,
-      owner: document.getElementById('new-owner').value,
-      status: document.getElementById('new-status').value,
-      progress: Number(document.getElementById('new-progress').value),
-      description: document.getElementById('new-description').value,
-      createdAt: new Date()
-    });
-
-    closeModal();
-  });
-
-  window.deleteProject = async function(id) {
-    await deleteDoc(doc(db, "projects", id));
-  };
-
-  window.handleProjectChange = async function(id, field, value) {
-    await updateDoc(doc(db, "projects", id), {
-      [field]: value
-    });
-  };
-
-  window.handleProgressChange = async function(id, value) {
-    await updateDoc(doc(db, "projects", id), {
-      progress: Number(value)
-    });
-  };
-
-  window.openModal = function() {
-    document.getElementById('modal').classList.remove('hidden');
-  };
-
-  window.closeModal = function() {
-    document.getElementById('modal').classList.add('hidden');
-    document.getElementById('add-project-form').reset();
-  };
-
-});
-
-</script>
-function getStatusColorClasses(status) {
-  switch (status) {
-    case 'Em Andamento': return 'bg-blue-50 text-blue-700 border-blue-200';
-    case 'Revisão': return 'bg-amber-50 text-amber-700 border-amber-200';
-    case 'Planejamento': return 'bg-[#FF5510]/10 text-[#FF5510] border-[#FF5510]/30';
-    case 'Contínuo': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    default: return 'bg-slate-50 text-slate-700 border-slate-200';
-  }
-}
-
-function renderProjects() {
-  const grid = document.getElementById('projects-grid');
-  document.getElementById('active-count').innerText = projects.length;
-
-  grid.innerHTML = projects.map(project => `
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative">
-      <button onclick="deleteProject('${project.id}')" class="absolute top-4 right-4 text-red-500">🗑️</button>
-
-      <input 
-        type="text"
-        value="${project.name || ''}"
-        onchange="handleProjectChange('${project.id}', 'name', this.value)"
-        class="font-bold text-lg mb-2 w-full border-b focus:outline-none"
-      />
-
-      <textarea 
-        onchange="handleProjectChange('${project.id}', 'description', this.value)"
-        class="text-sm mb-2 w-full border focus:outline-none"
-      >${project.description || ''}</textarea>
-
-      <input 
-        type="text"
-        value="${project.owner || ''}"
-        onchange="handleProjectChange('${project.id}', 'owner', this.value)"
-        class="text-sm mb-2 w-full border-b focus:outline-none"
-      />
-
-      <select 
-        onchange="handleProjectChange('${project.id}', 'status', this.value)"
-        class="mb-2 px-2 py-1 border rounded ${getStatusColorClasses(project.status)}"
-      >
-        <option value="Planejamento" ${project.status === 'Planejamento' ? 'selected' : ''}>Planejamento</option>
-        <option value="Em Andamento" ${project.status === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option>
-        <option value="Revisão" ${project.status === 'Revisão' ? 'selected' : ''}>Revisão</option>
-        <option value="Contínuo" ${project.status === 'Contínuo' ? 'selected' : ''}>Contínuo</option>
-      </select>
-
-      <input 
-        type="number"
-        min="0" max="100"
-        value="${project.progress || 0}"
-        oninput="handleProgressChange('${project.id}', this.value)"
-        class="w-20 border-b focus:outline-none"
-      /> %
     </div>
-  `).join('');
-}
 
-// 🔥 TEMPO REAL
-onSnapshot(projectsRef, (snapshot) => {
-  projects = snapshot.docs.map(docItem => ({
-    id: docItem.id,
-    ...docItem.data()
-  }));
-  renderProjects();
-});
+    <!-- MODAL: Adicionar Novo Projeto -->
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100">
+                <h2 class="text-xl font-bold text-slate-800">Novo Projeto</h2>
+                <button 
+                    onclick="closeModal()"
+                    class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
+                >
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <form id="add-project-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nome do Projeto</label>
+                    <input id="new-name" required type="text" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700" placeholder="Ex: Expansão MT" />
+                </div>
 
-// ➕ CRIAR
-document.getElementById('add-project-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Categoria</label>
+                    <input id="new-category" type="text" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700" placeholder="Ex: Vendas, Marketing..." />
+                </div>
 
-  await addDoc(projectsRef, {
-    name: document.getElementById('new-name').value,
-    category: document.getElementById('new-category').value,
-    owner: document.getElementById('new-owner').value,
-    status: document.getElementById('new-status').value,
-    progress: Number(document.getElementById('new-progress').value),
-    description: document.getElementById('new-description').value,
-    createdAt: new Date()
-  });
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Responsável</label>
+                    <input id="new-owner" required type="text" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700" placeholder="Nome do analista..." />
+                </div>
 
-  closeModal();
-});
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Estatuto</label>
+                        <select id="new-status" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700 bg-white">
+                            <option value="Planeamento">Planeamento</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Revisão">Revisão</option>
+                            <option value="Contínuo">Contínuo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Progresso (%)</label>
+                        <input id="new-progress" type="number" min="0" max="100" value="0" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700" />
+                    </div>
+                </div>
 
-// 🗑️ EXCLUIR
-async function deleteProject(id) {
-  await deleteDoc(doc(db, "projects", id));
-}
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Descrição</label>
+                    <textarea id="new-description" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700 resize-none h-24" placeholder="Breve resumo do projeto..."></textarea>
+                </div>
 
-// ✏️ EDITAR CAMPOS
-async function handleProjectChange(id, field, value) {
-  await updateDoc(doc(db, "projects", id), {
-    [field]: value
-  });
-}
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2.5 rounded-xl font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
+                    <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl font-semibold text-white bg-[#FF5510] hover:bg-[#E64D0F] shadow-sm shadow-[#FF5510]/30 transition-colors">Salvar Projeto</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-// 📊 EDITAR PROGRESSO
-async function handleProgressChange(id, value) {
-  await updateDoc(doc(db, "projects", id), {
-    progress: Number(value)
-  });
-}
+    <!-- Módulo Firebase e Lógica da Aplicação -->
+    <script type="module">
+        // Importar Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-window.deleteProject = deleteProject;
-window.handleProjectChange = handleProjectChange;
-window.handleProgressChange = handleProgressChange;
+        // A SUA CONFIGURAÇÃO DO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyDA6FxBbzCTtR0sd6FZ_32cZry4XVH-4vc",
+            authDomain: "painel-de-projetos-87599.firebaseapp.com",
+            projectId: "painel-de-projetos-87599",
+            storageBucket: "painel-de-projetos-87599.firebasestorage.app",
+            messagingSenderId: "774075799350",
+            appId: "1:774075799350:web:b1ff1fac3a49c4c249c597"
+        };
 
-window.openModal = function() {
-  document.getElementById('modal').classList.remove('hidden');
-};
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const collectionName = 'projetos_centro_oeste'; // Nome da coleção na base de dados
+        
+        let projects = [];
+        let currentUser = null;
 
-window.closeModal = function() {
-  document.getElementById('modal').classList.add('hidden');
-  document.getElementById('add-project-form').reset();
-};
-</script>
+        // Autenticar utilizador anonimamente (Necessário para segurança do Firebase)
+        async function initAuth() {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Erro na autenticação:", error);
+                document.getElementById('conn-status').innerText = "Erro Auth";
+                document.getElementById('conn-status').className = "ml-2 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold";
+            }
+        }
+
+        // Aguardar o estado de autenticação
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loadRealtimeProjects();
+            }
+        });
+
+        initAuth();
+
+        // Dados de Sementeira (Seed) caso a base de dados esteja vazia
+        const initialSeedData = [
+            { name: 'Campanha Nacional', description: 'Acompanhamento e execução das diretrizes da campanha nacional na região Centro-Oeste.', status: 'Em Andamento', progress: 65, owner: 'Sénior e Pleno', category: 'Marketing Estratégico', iconName: 'map-pin', iconColor: 'text-blue-500' },
+            { name: 'Marcas Próprias', description: 'Estratégia de penetração e alavancagem de vendas dos produtos de marca própria.', status: 'Em Andamento', progress: 40, owner: 'Analista Sénior', category: 'Comercial', iconName: 'briefcase', iconColor: 'text-[#FF5510]' },
+            { name: 'Como eu Faço (Garciele)', description: 'Mapeamento de processos, treinamentos e melhores práticas regionais.', status: 'Revisão', progress: 85, owner: 'Garciele', category: 'Processos / Treinamento', iconName: 'users', iconColor: 'text-emerald-500' },
+            { name: 'Pricing', description: 'Análise de competitividade, margem e ajustes de preços para o Centro-Oeste.', status: 'Contínuo', progress: 50, owner: 'Analista Pleno', category: 'Análise de Dados', iconName: 'trending-up', iconColor: 'text-rose-500' },
+            { name: 'Sales Force', description: 'Gestão da ferramenta, suporte ao time de vendas e análise de funil.', status: 'Em Andamento', progress: 70, owner: 'Sénior e Pleno', category: 'Tecnologia / CRM', iconName: 'clock', iconColor: 'text-orange-500' },
+            { name: 'Corrida de Rua', description: 'Planejamento, patrocínio e execução do evento de marketing regional.', status: 'Planeamento', progress: 15, owner: 'Analista Sénior', category: 'Eventos', iconName: 'calendar', iconColor: 'text-teal-500' }
+        ];
+
+        let isFirstLoad = true;
+
+        // Escutar a Base de Dados em Tempo Real
+        function loadRealtimeProjects() {
+            if (!currentUser) return;
+            const projectsRef = collection(db, collectionName);
+
+            onSnapshot(projectsRef, async (snapshot) => {
+                // Se a BD estiver vazia, inserir os dados iniciais!
+                if (snapshot.empty && isFirstLoad) {
+                    isFirstLoad = false;
+                    for (const project of initialSeedData) {
+                        await addDoc(projectsRef, project);
+                    }
+                    return; // O onSnapshot será disparado novamente após as adições
+                }
+
+                isFirstLoad = false;
+                projects = [];
+                
+                snapshot.forEach((doc) => {
+                    projects.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Ordenar por data de criação ou nome
+                projects.sort((a, b) => a.name.localeCompare(b.name));
+                
+                renderProjects();
+            }, (error) => {
+                console.error("Erro ao ler dados:", error);
+            });
+        }
+
+        // Função para obter classes de cor com base no estatuto
+        function getStatusColorClasses(status) {
+            switch (status) {
+                case 'Em Andamento': return 'bg-blue-50 text-blue-700 border-blue-200';
+                case 'Revisão': return 'bg-amber-50 text-amber-700 border-amber-200';
+                case 'Planeamento': return 'bg-[#FF5510]/10 text-[#FF5510] border-[#FF5510]/30';
+                case 'Contínuo': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                default: return 'bg-slate-50 text-slate-700 border-slate-200';
+            }
+        }
+
+        // Renderizar Grelha
+        function renderProjects() {
+            // Proteção UX: Não recarregar o HTML se o utilizador estiver a digitar ativamente num campo, para não perder o foco.
+            const activeElem = document.activeElement;
+            if (activeElem && (activeElem.tagName === 'INPUT' || activeElem.tagName === 'TEXTAREA' || activeElem.tagName === 'SELECT')) {
+                const inGrid = document.getElementById('projects-grid').contains(activeElem);
+                if (inGrid) return; // Aguarda o blur (onchange) para re-renderizar
+            }
+
+            const grid = document.getElementById('projects-grid');
+            document.getElementById('active-count').innerText = projects.length;
+            
+            if (projects.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Nenhum projeto encontrado. Clique em "Novo Projeto" para começar.</div>`;
+                return;
+            }
+
+            grid.innerHTML = projects.map(project => `
+                <div class="group bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-[#FF5510]/30 transition-all duration-300 flex flex-col h-full relative">
+                    
+                    <button onclick="window.deleteProject('${project.id}')" class="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-60 group-hover:opacity-100" title="Excluir Projeto">
+                        <i data-lucide="trash-2" class="w-[18px] h-[18px]"></i>
+                    </button>
+
+                    <div class="flex items-start gap-4 mb-4 pr-8">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-[#FF5510]/5 group-hover:border-[#FF5510]/20 transition-colors shrink-0">
+                            <i data-lucide="${project.iconName || 'briefcase'}" class="w-[22px] h-[22px] ${project.iconColor || 'text-[#FF5510]'}"></i>
+                        </div>
+                        <div class="pt-1 flex-1 min-w-0">
+                            <input 
+                                type="text"
+                                value="${project.name}"
+                                onchange="window.handleProjectChange('${project.id}', 'name', this.value)"
+                                class="font-bold text-slate-900 text-[17px] leading-tight mb-1 bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-[#FF5510] focus:outline-none w-full transition-colors truncate"
+                                placeholder="Nome do projeto"
+                            />
+                            <input 
+                                type="text"
+                                value="${project.category}"
+                                onchange="window.handleProjectChange('${project.id}', 'category', this.value)"
+                                class="block px-2 py-0.5 bg-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wider rounded-md border border-transparent hover:border-slate-300 focus:border-[#FF5510] focus:outline-none focus:bg-white transition-colors w-full max-w-[150px]"
+                                placeholder="Categoria"
+                            />
+                        </div>
+                    </div>
+
+                    <textarea 
+                        onchange="window.handleProjectChange('${project.id}', 'description', this.value)"
+                        class="text-slate-500 text-sm leading-relaxed mb-4 flex-grow bg-transparent border-2 border-transparent hover:border-slate-200 focus:bg-slate-50 focus:border-[#FF5510] focus:outline-none resize-none rounded-lg p-2 -mx-2 transition-colors w-[calc(100%+16px)]"
+                        rows="3"
+                        placeholder="Descrição do projeto..."
+                    >${project.description}</textarea>
+
+                    <div class="space-y-5 mt-auto bg-slate-50/50 -mx-6 -mb-6 p-6 border-t border-slate-100/60 rounded-b-2xl">
+                        
+                        <div class="flex justify-between items-center group/input">
+                            <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Resp.
+                            </span>
+                            <div class="relative flex items-center flex-1 justify-end ml-2">
+                                <input 
+                                    type="text" 
+                                    value="${project.owner}"
+                                    onchange="window.handleProjectChange('${project.id}', 'owner', this.value)"
+                                    class="text-right text-sm font-semibold text-slate-700 bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-[#FF5510] focus:outline-none focus:ring-0 transition-colors w-full max-w-[160px] py-1 pr-5"
+                                    placeholder="Nome..."
+                                />
+                                <i data-lucide="pencil-line" class="w-3.5 h-3.5 text-slate-300 absolute right-0 pointer-events-none group-hover/input:text-[#FF5510] transition-colors"></i>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center group/status">
+                            <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider shrink-0">Estatuto</span>
+                            <div class="relative ml-2">
+                                <select 
+                                    onchange="window.handleProjectChange('${project.id}', 'status', this.value)"
+                                    class="px-3 py-1 pr-6 rounded-full text-[11px] font-bold border outline-none cursor-pointer hover:opacity-80 transition-opacity appearance-none text-center ${getStatusColorClasses(project.status)}"
+                                >
+                                    <option value="Planeamento" ${project.status === 'Planeamento' ? 'selected' : ''} class="bg-white text-slate-800">Planeamento</option>
+                                    <option value="Em Andamento" ${project.status === 'Em Andamento' ? 'selected' : ''} class="bg-white text-slate-800">Em Andamento</option>
+                                    <option value="Revisão" ${project.status === 'Revisão' ? 'selected' : ''} class="bg-white text-slate-800">Revisão</option>
+                                    <option value="Contínuo" ${project.status === 'Contínuo' ? 'selected' : ''} class="bg-white text-slate-800">Contínuo</option>
+                                </select>
+                                <i data-lucide="pencil-line" class="w-3 h-3 opacity-50 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-end mb-2 group/progress">
+                                <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Progresso</span>
+                                <div class="flex items-center gap-0.5">
+                                    <input 
+                                        type="number" 
+                                        min="0" max="100"
+                                        value="${project.progress}"
+                                        oninput="window.updateProgressVisual('${project.id}', this.value)"
+                                        onchange="window.handleProjectChange('${project.id}', 'progress', Number(this.value))"
+                                        class="text-[#FF5510] font-bold text-sm bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-[#FF5510] focus:outline-none w-10 text-right transition-colors"
+                                    />
+                                    <span class="text-[#FF5510] font-bold text-sm">%</span>
+                                </div>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div 
+                                    id="progress-bar-${project.id}"
+                                    class="bg-[#FF5510] h-full rounded-full transition-all duration-700 ease-out relative" 
+                                    style="width: ${project.progress}%"
+                                >
+                                    <div class="absolute top-0 right-0 bottom-0 left-0 bg-white/20"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons(); // Recriar ícones após injeção
+        }
+
+        // ====== FUNÇÕES EXPOSTAS GLOBALMENTE (Para o HTML interagir com o Module) ======
+
+        window.deleteProject = async (id) => {
+            if(window.confirm('Tem a certeza que deseja excluir este projeto da nuvem?')) {
+                const docRef = doc(db, collectionName, id);
+                await deleteDoc(docRef);
+            }
+        };
+
+        window.handleProjectChange = async (id, field, value) => {
+            // Atualiza na base de dados Firebase
+            const docRef = doc(db, collectionName, id);
+            await updateDoc(docRef, { [field]: value });
+            
+            // Força a renderização local caso seja o estatuto (para mudar a cor)
+            if (field === 'status') renderProjects();
+        };
+
+        window.updateProgressVisual = (id, value) => {
+            // Atualiza apenas a barra visualmente enquanto digita (evita spam na base de dados)
+            const bar = document.getElementById(`progress-bar-${id}`);
+            if(bar) bar.style.width = `${Number(value)}%`;
+        };
+
+        window.openModal = () => document.getElementById('modal').classList.remove('hidden');
+        
+        window.closeModal = () => {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('add-project-form').reset();
+        };
+
+        // Adicionar Novo Projeto ao Firebase
+        document.getElementById('add-project-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const newProject = {
+                name: document.getElementById('new-name').value,
+                category: document.getElementById('new-category').value,
+                owner: document.getElementById('new-owner').value,
+                status: document.getElementById('new-status').value,
+                progress: Number(document.getElementById('new-progress').value),
+                description: document.getElementById('new-description').value,
+                iconName: 'briefcase', 
+                iconColor: 'text-[#FF5510]',
+                createdAt: new Date().toISOString()
+            };
+
+            await addDoc(collection(db, collectionName), newProject);
+            window.closeModal();
+        });
+
+    </script>
+</body>
+</html>
