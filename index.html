@@ -1,431 +1,143 @@
-<!DOCTYPE html>
-<html lang="pt-PT">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Projetos Centro-Oeste</title>
-    
-    <!-- Tailwind CSS (CDN) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Lucide Icons (CDN) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Configuração extra do Tailwind se necessário -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: '#FF5510',
-                        brandHover: '#E64D0F'
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-[#F8FAFC] text-slate-800 font-sans min-h-screen">
-
-    <div class="p-4 md:p-8">
-        
-        <!-- Cabeçalho do Painel -->
-        <div class="max-w-7xl mx-auto mb-8 bg-white p-6 md:px-8 md:py-6 rounded-2xl shadow-[0_2px_10px_-3px_rgba(255,85,16,0.15)] border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div>
-                <div class="flex items-center gap-3 mb-1">
-                    <div class="bg-[#FF5510] p-2 rounded-lg text-white">
-                        <i data-lucide="trending-up" class="w-5 h-5"></i>
-                    </div>
-                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Portfólio de Projetos</h1>
-                </div>
-                <p class="text-slate-500 text-sm ml-11">Região Centro-Oeste • Analista Sénior & Pleno</p>
-            </div>
-            
-            <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
-                <div class="bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-slate-600 text-sm font-semibold flex items-center gap-2">
-                    <i data-lucide="check-circle" class="w-[18px] h-[18px] text-emerald-500"></i>
-                    <span id="active-count">6</span> Ativos
-                </div>
-                <button 
-                    onclick="openModal()"
-                    class="flex-1 md:flex-none bg-[#FF5510] hover:bg-[#E64D0F] text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm shadow-[#FF5510]/30"
-                >
-                    <i data-lucide="plus" class="w-[18px] h-[18px]"></i> Novo Projeto
-                </button>
-            </div>
-        </div>
-
-        <!-- Grelha de Projetos -->
-        <div id="projects-grid" class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Os cartões de projeto serão injetados aqui via JavaScript -->
-        </div>
-
-    </div>
-
-    <!-- MODAL: Adicionar Novo Projeto -->
-    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div class="flex justify-between items-center p-6 border-b border-slate-100">
-                <h2 class="text-xl font-bold text-slate-800">Novo Projeto</h2>
-                <button 
-                    onclick="closeModal()"
-                    class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-full transition-colors"
-                >
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            
-            <form id="add-project-form" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nome do Projeto</label>
-                    <input id="new-name" required type="text" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700" placeholder="Ex: Expansão MT" />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Categoria</label>
-                    <input id="new-category" type="text" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700" placeholder="Ex: Vendas, Marketing..." />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Responsável</label>
-                    <input id="new-owner" required type="text" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700" placeholder="Nome do analista..." />
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Estatuto</label>
-                        <select id="new-status" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700 bg-white">
-                            <option value="Planejamento">Planejamento</option>
-                            <option value="Em Andamento">Em Andamento</option>
-                            <option value="Revisão">Revisão</option>
-                            <option value="Contínuo">Contínuo</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Progresso (%)</label>
-                        <input id="new-progress" type="number" min="0" max="100" value="0" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700" />
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Descrição</label>
-                    <textarea id="new-description" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#FF5510] focus:ring-2 focus:ring-[#FF5510]/20 outline-none transition-all text-slate-700 resize-none h-24" placeholder="Breve resumo do projeto..."></textarea>
-                </div>
-
-                <div class="pt-4 flex gap-3">
-                    <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2.5 rounded-xl font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Cancelar</button>
-                    <button type="submit" class="flex-1 px-4 py-2.5 rounded-xl font-semibold text-white bg-[#FF5510] hover:bg-[#E64D0F] shadow-sm shadow-[#FF5510]/30 transition-colors">Salvar Projeto</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Lógica JavaScript -->
-    <script>
-        // Estado inicial dos projetos
-        let projects = [
-            {
-                id: 1,
-                name: 'Campanha Nacional',
-                description: 'Acompanhamento e execução das diretrizes da campanha nacional na região Centro-Oeste.',
-                status: 'Em Andamento',
-                progress: 90,
-                owner: 'Sénior e Pleno',
-                category: 'Marketing',
-                iconName: 'map-pin',
-                iconColor: 'text-blue-500'
-            },
-            {
-                id: 2,
-                name: 'Marcas Próprias',
-                description: 'Estratégia de penetração e alavancagem de vendas dos produtos de marca própria.',
-                status: 'Em Andamento',
-                progress: 70,
-                owner: 'Pleno e Sênior',
-                category: 'Comercial',
-                iconName: 'briefcase',
-                iconColor: 'text-[#FF5510]'
-            },
-            {
-                id: 3,
-                name: 'Como eu Faço',
-                description: 'Mapeamento de processos, treinamentos e melhores práticas regionais.',
-                status: 'planejamento',
-                progress: 10,
-                owner: 'Garcieli',
-                category: 'Sucesso do Associado',
-                iconName: 'users',
-                iconColor: 'text-emerald-500'
-            },
-            {
-                id: 4,
-                name: 'Pricing',
-                description: 'Criação do passo a passo para acompanhamento do Projeto',
-                status: 'Contínuo',
-                progress: 2,
-                owner: 'Analista Pleno',
-                category: 'BI e Precificação',
-                iconName: 'trending-up',
-                iconColor: 'text-rose-500'
-            },
-            {
-                id: 5,
-                name: 'Sales Force',
-                description: 'Gestão da ferramenta, suporte ao time de vendas e análise de funil.',
-                status: 'Em Andamento',
-                progress: 2,
-                owner: 'Mariane',
-                category: 'Tecnologia / Consultoria',
-                iconName: 'clock',
-                iconColor: 'text-orange-500'
-            },
-            {
-                id: 6,
-                name: 'Corrida de Rua',
-                description: 'Planejamento, patrocínio e execução do evento de marketing regional.',
-                status: 'Planejamento',
-                progress: 25,
-                owner: 'Mariane',
-                category: 'MKT, Com, Jur e Suc.',
-                iconName: 'calendar',
-                iconColor: 'text-teal-500'
-            }
-        ];
-
-        // Função para obter cores do estatuto
-        function getStatusColorClasses(status) {
-            switch (status) {
-                case 'Em Andamento': return 'bg-blue-50 text-blue-700 border-blue-200';
-                case 'Revisão': return 'bg-amber-50 text-amber-700 border-amber-200';
-                case 'Planejamento': return 'bg-[#FF5510]/10 text-[#FF5510] border-[#FF5510]/30';
-                case 'Contínuo': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                default: return 'bg-slate-50 text-slate-700 border-slate-200';
-            }
-        }
-
-        // Renderizar a grelha de projetos
-        function renderProjects() {
-            const grid = document.getElementById('projects-grid');
-            document.getElementById('active-count').innerText = projects.length;
-            
-            grid.innerHTML = projects.map(project => `
-                <div class="group bg-white rounded-2xl shadow-sm border border-slate-200/60 p-6 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:border-[#FF5510]/30 transition-all duration-300 flex flex-col h-full relative">
-                    
-                    <!-- Botão Excluir -->
-                    <button onclick="deleteProject(${project.id})" class="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-60 group-hover:opacity-100" title="Excluir Projeto">
-                        <i data-lucide="trash-2" class="w-[18px] h-[18px]"></i>
-                    </button>
-
-                    <!-- Cabeçalho do Cartão -->
-                    <div class="flex items-start gap-4 mb-4 pr-8">
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-[#FF5510]/5 group-hover:border-[#FF5510]/20 transition-colors shrink-0">
-                            <i data-lucide="${project.iconName}" class="w-[22px] h-[22px] ${project.iconColor}"></i>
-                        </div>
-                        <div class="pt-1 flex-1 min-w-0">
-                            <input 
-                                type="text"
-                                value="${project.name}"
-                                onchange="handleProjectChange(${project.id}, 'name', this.value)"
-                                class="font-bold text-slate-900 text-[17px] leading-tight mb-1 bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-[#FF5510] focus:outline-none w-full transition-colors truncate"
-                                placeholder="Nome do projeto"
-                            />
-                            <input 
-                                type="text"
-                                value="${project.category}"
-                                onchange="handleProjectChange(${project.id}, 'category', this.value)"
-                                class="block px-2 py-0.5 bg-slate-100 text-slate-500 text-[11px] font-bold uppercase tracking-wider rounded-md border border-transparent hover:border-slate-300 focus:border-[#FF5510] focus:outline-none focus:bg-white transition-colors w-full max-w-[150px]"
-                                placeholder="Categoria"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Descrição -->
-                    <textarea 
-                        onchange="handleProjectChange(${project.id}, 'description', this.value)"
-                        class="text-slate-500 text-sm leading-relaxed mb-4 flex-grow bg-transparent border-2 border-transparent hover:border-slate-200 focus:bg-slate-50 focus:border-[#FF5510] focus:outline-none resize-none rounded-lg p-2 -mx-2 transition-colors w-[calc(100%+16px)]"
-                        rows="3"
-                        placeholder="Descrição do projeto..."
-                    >${project.description}</textarea>
-
-                    <!-- Rodapé do Cartão: Inputs e Estatuto -->
-                    <div class="space-y-5 mt-auto bg-slate-50/50 -mx-6 -mb-6 p-6 border-t border-slate-100/60 rounded-b-2xl">
-                        
-                        <!-- Responsável -->
-                        <div class="flex justify-between items-center group/input">
-                            <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 shrink-0">
-                                <i data-lucide="users" class="w-3.5 h-3.5"></i> Resp.
-                            </span>
-                            <div class="relative flex items-center flex-1 justify-end ml-2">
-                                <input 
-                                    type="text" 
-                                    value="${project.owner}"
-                                    onchange="handleProjectChange(${project.id}, 'owner', this.value)"
-                                    class="text-right text-sm font-semibold text-slate-700 bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-[#FF5510] focus:outline-none focus:ring-0 transition-colors w-full max-w-[160px] py-1 pr-5"
-                                    placeholder="Nome..."
-                                />
-                                <i data-lucide="pencil-line" class="w-3.5 h-3.5 text-slate-300 absolute right-0 pointer-events-none group-hover/input:text-[#FF5510] transition-colors"></i>
-                            </div>
-                        </div>
-
-                        <!-- Estatuto -->
-                        <div class="flex justify-between items-center group/status">
-                            <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider shrink-0">Estatuto</span>
-                            <div class="relative ml-2">
-                                <select 
-                                    onchange="handleProjectChange(${project.id}, 'status', this.value)"
-                                    class="px-3 py-1 pr-6 rounded-full text-[11px] font-bold border outline-none cursor-pointer hover:opacity-80 transition-opacity appearance-none text-center ${getStatusColorClasses(project.status)}"
-                                >
-                                    <option value="Planejamento" ${project.status === 'Planejamento' ? 'selected' : ''} class="bg-white text-slate-800">Planejamento</option>
-                                    <option value="Em Andamento" ${project.status === 'Em Andamento' ? 'selected' : ''} class="bg-white text-slate-800">Em Andamento</option>
-                                    <option value="Revisão" ${project.status === 'Revisão' ? 'selected' : ''} class="bg-white text-slate-800">Revisão</option>
-                                    <option value="Contínuo" ${project.status === 'Contínuo' ? 'selected' : ''} class="bg-white text-slate-800">Contínuo</option>
-                                </select>
-                                <i data-lucide="pencil-line" class="w-3 h-3 opacity-50 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                            </div>
-                        </div>
-
-                        <!-- Barra de Progresso -->
-                        <div>
-                            <div class="flex justify-between items-end mb-2 group/progress">
-                                <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Progresso</span>
-                                <div class="flex items-center gap-0.5">
-                                    <input 
-                                        type="number" 
-                                        min="0" max="100"
-                                        value="${project.progress}"
-                                        oninput="handleProgressChange(${project.id}, this.value)"
-                                        class="text-[#FF5510] font-bold text-sm bg-transparent border-b-2 border-transparent hover:border-slate-300 focus:border-[#FF5510] focus:outline-none w-10 text-right transition-colors"
-                                    />
-                                    <span class="text-[#FF5510] font-bold text-sm">%</span>
-                                </div>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                                <div 
-                                    id="progress-bar-${project.id}"
-                                    class="bg-[#FF5510] h-full rounded-full transition-all duration-700 ease-out relative" 
-                                    style="width: ${project.progress}%"
-                                >
-                                    <div class="absolute top-0 right-0 bottom-0 left-0 bg-white/20"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-
-            // Recriar ícones Lucide após injetar o HTML
-            lucide.createIcons();
-        }
-
-        // Lidar com a exclusão
-        function deleteProject(id) {
-            if(window.confirm('Tem a certeza que deseja excluir este projeto?')) {
-                projects = projects.filter(p => p.id !== id);
-                renderProjects();
-            }
-        }
-
-        // Atualizar campos genéricos (exceto o progresso visual em tempo real)
-        function handleProjectChange(id, field, value) {
-            const project = projects.find(p => p.id === id);
-            if (project) {
-                project[field] = value;
-                // Se alterar o estatuto, voltamos a renderizar para atualizar a cor do "badge"
-                if (field === 'status') {
-                    renderProjects();
-                }
-            }
-        }
-
-        // Atualizar especificamente o progresso para feedback visual em tempo real
-        function handleProgressChange(id, value) {
-            const numValue = Number(value);
-            const project = projects.find(p => p.id === id);
-            if (project) {
-                project.progress = numValue;
-                // Atualizar o elemento visual diretamente sem renderizar toda a grelha
-                const bar = document.getElementById(`progress-bar-${id}`);
-                if(bar) bar.style.width = `${numValue}%`;
-            }
-        }
-
-        // Controlos do Modal
-        function openModal() {
-            document.getElementById('modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-            document.getElementById('add-project-form').reset();
-        }
-
-        // Adicionar Novo Projeto
-        document.getElementById('add-project-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const newProject = {
-                id: Date.now(),
-                name: document.getElementById('new-name').value,
-                category: document.getElementById('new-category').value,
-                owner: document.getElementById('new-owner').value,
-                status: document.getElementById('new-status').value,
-                progress: Number(document.getElementById('new-progress').value),
-                description: document.getElementById('new-description').value,
-                iconName: 'briefcase', // Ícone padrão
-                iconColor: 'text-[#FF5510]'
-            };
-
-            projects.push(newProject);
-            renderProjects();
-            closeModal();
-        });
-
-        // Inicializar a renderização no carregamento da página
-        document.addEventListener('DOMContentLoaded', () => {
-            renderProjects();
-        });
-
-    </script>
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-  import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    onSnapshot 
-  } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDA6FxBbzCTtR0sd6FZ_32cZry4XVH-4vc",
-    authDomain: "painel-de-projetos-87599.firebaseapp.com",
-    projectId: "painel-de-projetos-87599",
-    storageBucket: "painel-de-projetos-87599.firebasestorage.app",
-    messagingSenderId: "774075799350",
-    appId: "1:774075799350:web:b1ff1fac3a49c4c249c597"
-  };
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "painel-de-projetos-87599.firebaseapp.com",
+  projectId: "painel-de-projetos-87599",
+  storageBucket: "painel-de-projetos-87599.firebasestorage.app",
+  messagingSenderId: "774075799350",
+  appId: "1:774075799350:web:b1ff1fac3a49c4c249c597"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const projectsRef = collection(db, "projects");
 
-  console.log("Firebase conectado!");
+let projects = [];
 
-  // Salvar ação
-  const projectsRef = collection(db, "projects");
+function getStatusColorClasses(status) {
+  switch (status) {
+    case 'Em Andamento': return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'Revisão': return 'bg-amber-50 text-amber-700 border-amber-200';
+    case 'Planejamento': return 'bg-[#FF5510]/10 text-[#FF5510] border-[#FF5510]/30';
+    case 'Contínuo': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    default: return 'bg-slate-50 text-slate-700 border-slate-200';
+  }
+}
 
-// Escutar mudanças em tempo real
+function renderProjects() {
+  const grid = document.getElementById('projects-grid');
+  document.getElementById('active-count').innerText = projects.length;
+
+  grid.innerHTML = projects.map(project => `
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 relative">
+      <button onclick="deleteProject('${project.id}')" class="absolute top-4 right-4 text-red-500">🗑️</button>
+
+      <input 
+        type="text"
+        value="${project.name || ''}"
+        onchange="handleProjectChange('${project.id}', 'name', this.value)"
+        class="font-bold text-lg mb-2 w-full border-b focus:outline-none"
+      />
+
+      <textarea 
+        onchange="handleProjectChange('${project.id}', 'description', this.value)"
+        class="text-sm mb-2 w-full border focus:outline-none"
+      >${project.description || ''}</textarea>
+
+      <input 
+        type="text"
+        value="${project.owner || ''}"
+        onchange="handleProjectChange('${project.id}', 'owner', this.value)"
+        class="text-sm mb-2 w-full border-b focus:outline-none"
+      />
+
+      <select 
+        onchange="handleProjectChange('${project.id}', 'status', this.value)"
+        class="mb-2 px-2 py-1 border rounded ${getStatusColorClasses(project.status)}"
+      >
+        <option value="Planejamento" ${project.status === 'Planejamento' ? 'selected' : ''}>Planejamento</option>
+        <option value="Em Andamento" ${project.status === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option>
+        <option value="Revisão" ${project.status === 'Revisão' ? 'selected' : ''}>Revisão</option>
+        <option value="Contínuo" ${project.status === 'Contínuo' ? 'selected' : ''}>Contínuo</option>
+      </select>
+
+      <input 
+        type="number"
+        min="0" max="100"
+        value="${project.progress || 0}"
+        oninput="handleProgressChange('${project.id}', this.value)"
+        class="w-20 border-b focus:outline-none"
+      /> %
+    </div>
+  `).join('');
+}
+
+// 🔥 TEMPO REAL
 onSnapshot(projectsRef, (snapshot) => {
-  console.log("Projetos atualizados:");
-  snapshot.forEach((doc) => {
-    console.log(doc.data());
-  });
+  projects = snapshot.docs.map(docItem => ({
+    id: docItem.id,
+    ...docItem.data()
+  }));
+  renderProjects();
 });
-    console.log("Atualização em tempo real:");
-    snapshot.forEach((doc) => {
-      console.log(doc.data());
-    });
+
+// ➕ CRIAR
+document.getElementById('add-project-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  await addDoc(projectsRef, {
+    name: document.getElementById('new-name').value,
+    category: document.getElementById('new-category').value,
+    owner: document.getElementById('new-owner').value,
+    status: document.getElementById('new-status').value,
+    progress: Number(document.getElementById('new-progress').value),
+    description: document.getElementById('new-description').value,
+    createdAt: new Date()
   });
 
-  window.salvarAcao = salvarAcao;
+  closeModal();
+});
+
+// 🗑️ EXCLUIR
+async function deleteProject(id) {
+  await deleteDoc(doc(db, "projects", id));
+}
+
+// ✏️ EDITAR CAMPOS
+async function handleProjectChange(id, field, value) {
+  await updateDoc(doc(db, "projects", id), {
+    [field]: value
+  });
+}
+
+// 📊 EDITAR PROGRESSO
+async function handleProgressChange(id, value) {
+  await updateDoc(doc(db, "projects", id), {
+    progress: Number(value)
+  });
+}
+
+window.deleteProject = deleteProject;
+window.handleProjectChange = handleProjectChange;
+window.handleProgressChange = handleProgressChange;
+
+window.openModal = function() {
+  document.getElementById('modal').classList.remove('hidden');
+};
+
+window.closeModal = function() {
+  document.getElementById('modal').classList.add('hidden');
+  document.getElementById('add-project-form').reset();
+};
 </script>
-</body>
-</html>
